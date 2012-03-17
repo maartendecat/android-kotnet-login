@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <PreferenceCategory android:title="Account">
+        <EditTextPreference android:key="username" android:title="Username" android:summary="Your Kotnet username"/>
+        <EditTextPreference android:title="Password" android:key="password" android:summary="Your Kotnet password" android:inputType="textPassword"/>
+    </PreferenceCategory>
+    
+    
+
+</PreferenceScreen>
