@@ -21,4 +21,4 @@ To install the .apk file, follow the guidelines described here: http://www.brigh
 Contribute
 ==========
 
-You are always welcome to contribute to this app! Fork the project and do your thing!
+You are always welcome to contribute to this app. Fork the project and do your thing! You can also contact me using the project's home page: http://maartendecat.be/projects/android-kotnet-login-app/
