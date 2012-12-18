@@ -11,7 +11,7 @@ The app stores your Kotnet username and password on the phone. To log in, it fet
 Download
 ========
 
-The app is not available in the Android Market (yet). You can manually download the latest version of the app in the downloads section.
+The app is not available in the Android Market (yet). You can manually download the latest version of the app here: http://files.maartendecat.be/android-kotnet-login/
 
 How to install
 ==============
