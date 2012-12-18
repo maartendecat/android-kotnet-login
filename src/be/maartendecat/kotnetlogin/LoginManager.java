@@ -158,7 +158,7 @@ public class LoginManager {
 		
 		// fetch the login page
 		listeners.notifyNewStageReached("Fetching login page...");
-		Connection loginConnection = Jsoup.connect("https://netlogin.kuleuven.be/cgi-bin/wayf.pl?inst=kuleuven&lang=nl&submit=Ga+verder+%2F+Continue");
+		Connection loginConnection = Jsoup.connect("https://netlogin.kuleuven.be/cgi-bin/wayf2.pl?inst=kuleuven&lang=nl&submit=Ga+verder+%2F+Continue");
 		
 		new AsyncJSoupFetch(Type.GET, new AsyncJSoupFetchCallback() {
 			
@@ -217,9 +217,9 @@ public class LoginManager {
 			Log.e(TAG, "No password fields in the form. Quitting.");
 			listeners.notifyProcedureError("No password fields in the form.");
 			return;
-		} else if (forms.size() > 1) {
-			Log.e(TAG, "Multiple forms with name \"netlogin\" in the page. Quitting.");
-			listeners.notifyProcedureError("Multiple forms with name \"netlogin\" in the page.");
+		} else if (passwordFields.size() > 1) {
+			Log.e(TAG, "Multiple password fields in the form. Quitting.");
+			listeners.notifyProcedureError("Multiple password fields in the form. Quitting.");
 			return;
 		}
 		Element passwordField = passwordFields.first();
