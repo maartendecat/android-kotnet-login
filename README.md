@@ -22,3 +22,16 @@ Contribute
 ==========
 
 You are always welcome to contribute to this app. Fork the project and do your thing! You can also contact me using the project's home page: http://maartendecat.be/projects/android-kotnet-login-app/
+
+Changelog
+=========
+
+v0.1
+----
+
+* First version.
+
+v0.2
+----
+
+* Updated login page URL to most recent value.
