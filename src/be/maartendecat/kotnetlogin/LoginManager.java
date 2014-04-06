@@ -181,9 +181,33 @@ public class LoginManager {
 	 * @param loginPage
 	 */
 	private void onLoginPageFetched(Document loginPage) {
+		performLoginLogout(loginPage, true);
+	}
+
+	/**
+	 * Called after the async logout page fetch when the document fetch was successful.
+	 * 
+	 * @param logoutPage
+	 */
+	private void onLogoutPageFetched(Document logoutPage) {
+		performLoginLogout(logoutPage, false);
+	}
+
+	/**
+	 * Perform login and logout.
+	 * 
+	 * @param loginPage
+	 * @param isLogin
+	 */
+	private void performLoginLogout(Document loginPage, final Boolean isLogin) {
 		Log.i(TAG, "Fetched netlogin page");
 		
-		Elements forms = loginPage.select("form[name=netlogin]");
+		Elements forms;
+		if (isLogin)
+			forms = loginPage.select("form[name=netlogin]");
+		else
+			forms = loginPage.select("form[name=netlogout]");
+
 		if(forms.size() == 0) {
 			Log.e(TAG, "No forms with name \"netlogin\" in the page. Quitting.");
 			listeners.notifyProcedureError("No forms with name \"netlogin\" in the page.");
@@ -225,15 +249,19 @@ public class LoginManager {
 		Element passwordField = passwordFields.first();
 		// add the password to the connection
 		resultConnection.data(passwordField.attr("name"), password);
-		// finally, also add the username
-		resultConnection.data("uid", username);
+		// finally, also add the username if we are logging in
+		if (isLogin)
+			resultConnection.data("uid", username);
 		
 		// post the form and retrieve the result
 		listeners.notifyNewStageReached("Submitting login information...");
 		new AsyncJSoupFetch(Type.POST, new AsyncJSoupFetchCallback() {
 			
 			public void onSuccess(Document result) {
-				LoginManager.this.onResultPageFetched(result);
+				if (isLogin)
+					LoginManager.this.onResultPageFetched(result);
+				else
+					LoginManager.this.startLoginProcedure(username, password);
 			}
 			
 			public void onIOException(IOException e) {
@@ -261,8 +289,49 @@ public class LoginManager {
 		} else {
 			// The first sibling of the font element should be the <p> containing the error.
 			Element p = errorMsgs.first().nextElementSibling();
-			Log.e(TAG, "Eek, login failed: " + p.text());
-			listeners.notifyProcedureFailure(p.text());
+			if (p.text().indexOf("206 : maximum") != -1) {
+				Log.i(TAG, "Another device is connected");
+				listeners.notifyNewStageReached("Another device is connected, disconneting it...");
+				disconnectDevice(resultPage);
+			} else {
+				Log.e(TAG, "Eek, login failed: " + p.text());
+				listeners.notifyProcedureFailure(p.text());
+			}
 		}
+	}
+
+	/**
+	 * Logout from the other device.
+	 * 
+	 * @param page
+	 */
+	private void disconnectDevice(Document page) {
+		Elements forms = page.select("form[action~=.*/cgi-bin/wayf2.pl]");
+		Element form = forms.first();
+		String target = form.attr("action");
+		if (target.startsWith("/")) {
+			target = "https://netlogin.kuleuven.be" + target;
+		}
+		Connection resultConnection = Jsoup.connect(target);
+
+		Elements hiddenInputs = form.select("input[type=hidden]");
+		for(Element input: hiddenInputs) {
+			resultConnection.data(input.attr("name"), input.attr("value"));
+		}
+
+		new AsyncJSoupFetch(Type.POST, new AsyncJSoupFetchCallback() {
+
+			public void onSuccess(Document result) {
+				LoginManager.this.onLogoutPageFetched(result);
+			}
+
+			public void onIOException(IOException e) {
+				String description = "Failed to fetch the result page (" + e.getClass().getName() + ": " + e.getMessage() + ")";
+				Log.e(TAG, description);
+				listeners.notifyProcedureError(description);
+				// procedure finished
+			}
+
+		}).execute(resultConnection);
 	}
 }
