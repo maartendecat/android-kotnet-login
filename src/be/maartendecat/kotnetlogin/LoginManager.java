@@ -9,6 +9,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.util.Log;
 import be.maartendecat.kotnetlogin.AsyncJSoupFetch.AsyncJSoupFetchCallback;
 import be.maartendecat.kotnetlogin.AsyncJSoupFetch.Type;
@@ -22,6 +25,8 @@ import be.maartendecat.kotnetlogin.AsyncJSoupFetch.Type;
 public class LoginManager {
 	
 	private static final String TAG = "LoginManager";
+
+	private static Context context;
 	
 	/************************************
 	 * STATIC SINGLETON STUFF
@@ -29,8 +34,9 @@ public class LoginManager {
 	
 	private static LoginManager instance;
 	
-	public static LoginManager getInstance() {
+	public static LoginManager getInstance(KotnetLoginActivity context) {
 		if(instance == null) {
+			LoginManager.context = context;
 			instance = new LoginManager();
 		}
 		return instance;
@@ -89,6 +95,11 @@ public class LoginManager {
 		 * not correct).
 		 */
 		public void onProcedureFailure(String description);
+
+		/**
+		 * Called when the procedure is aborted.
+		 */
+		public void onProcedureAborted();
 	}
 	
 	/**
@@ -125,6 +136,12 @@ public class LoginManager {
 		public void notifyProcedureFailure(String description) {
 			for(LoginProcedureListener l: this) { 
 				l.onProcedureFailure(description);
+			}
+		}
+
+		public void notifyProcedureAborted() {
+			for(LoginProcedureListener l: this) {
+				l.onProcedureAborted();
 			}
 		}
 	}
@@ -291,13 +308,36 @@ public class LoginManager {
 			Element p = errorMsgs.first().nextElementSibling();
 			if (p.text().indexOf("206 : maximum") != -1) {
 				Log.i(TAG, "Another device is connected");
-				listeners.notifyNewStageReached("Another device is connected, disconneting it...");
-				disconnectDevice(resultPage);
+				abortLoginDialog(resultPage);
 			} else {
 				Log.e(TAG, "Eek, login failed: " + p.text());
 				listeners.notifyProcedureFailure(p.text());
 			}
 		}
+	}
+
+	/**
+	 * Show dialog to ask the user whether the other device has to be disconnected or not.
+	 * 
+	 * @param page
+	 */
+	private void abortLoginDialog(final Document page) {
+		AlertDialog.Builder builder = new AlertDialog.Builder(context);
+		builder.setMessage(R.string.disconnect_dialog)
+			.setCancelable(false)
+			.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+					disconnectDevice(page);
+				}
+			})
+			.setNegativeButton("No", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+					dialog.cancel();
+					listeners.notifyProcedureAborted();
+				}
+			});
+		AlertDialog alert = builder.create();
+		alert.show();
 	}
 
 	/**
