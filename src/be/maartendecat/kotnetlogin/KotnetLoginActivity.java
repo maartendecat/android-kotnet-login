@@ -67,7 +67,7 @@ public class KotnetLoginActivity extends Activity implements AccountDataListener
         AccountManager.initialize(this);
         am = AccountManager.getInstance();
         am.registerAccountDataListener(this);
-        lm = LoginManager.getInstance();
+        lm = LoginManager.getInstance(this);
         lm.registerLoginProcedureListener(this);
         
         ///////////////////////////////
@@ -177,7 +177,12 @@ public class KotnetLoginActivity extends Activity implements AccountDataListener
 		pd.setMessage("Login failed: " + description);
 		dismissProgressDialog(3000);
 	}
-	
+
+	public void onProcedureAborted() {
+		pd.setMessage("Login aborted");
+		dismissProgressDialog(1000);
+	}
+
     /************************************
      * HELPER METHODS
      ************************************/  
